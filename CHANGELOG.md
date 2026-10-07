@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3 — 2026-10-07
+
+- **No more flicker.** The tree was rebuilt every couple of seconds (and on every focus) because hidden files like `.DS_Store` made each check look like a change; it now redraws only when something visible actually changed.
+- **Revealed folders stay open.** Switching back to MarkEdit could collapse the folder containing the open file and hide its highlight; folders opened to reveal a file are now remembered, and tabs revealing their own files no longer overwrite each other's expanded folders.
+
 ## 0.1.2 — 2026-10-07
 
 - **Replace is now safe.** Pasting or dropping onto an item with the same name no longer moves the source to the Trash when the existing item contains it (e.g. cutting `foo/foo` and pasting into `foo`'s parent); that case now only offers Keep Both. Other replaces are staged: the existing item is moved to the Trash only once the new one is ready, and every step is undone if a later one fails.

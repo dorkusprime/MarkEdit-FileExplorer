@@ -338,6 +338,11 @@ export class Explorer {
     if (node !== undefined) {
       this.selection = new Set([node.path]);
       this.focusPath = this.anchorPath = node.path;
+      // Add the folders the reveal opened to the shared state; otherwise the
+      // next resync (e.g. switching back to MarkEdit) re-applies the saved state
+      // and collapses them. Merge rather than overwrite: every tab reveals its
+      // own file when the root changes, and they must not erase each other's.
+      this.rememberExpanded(node);
     }
     this.render();
     if (node !== undefined) {
@@ -377,6 +382,19 @@ export class Explorer {
     if (this.pollTimer !== undefined) {
       clearInterval(this.pollTimer);
       this.pollTimer = undefined;
+    }
+  }
+
+  /** Adds a node's ancestor folders to the saved expansion (other tabs follow). */
+  private rememberExpanded(node: TreeNode): void {
+    const key = STORE.expanded(this.model.root.path);
+    const saved = new Set(JSON.parse(store.get(key) ?? '[]') as string[]);
+    const before = saved.size;
+    for (let p = node.parent; p !== undefined && p !== this.model.root; p = p.parent) {
+      saved.add(p.path);
+    }
+    if (saved.size !== before) {
+      store.set(key, JSON.stringify([...saved]));
     }
   }
 
@@ -734,8 +752,9 @@ export class Explorer {
     } else if (key === null || key === STORE.open || key === STORE.width || key === STORE.position || key === STORE.root) {
       await this.syncFromStore();
     } else if (key === STORE.expanded(this.rootPath) && this.editing === undefined) {
-      await this.model.applyExpanded(JSON.parse(store.get(key) ?? '[]') as string[]);
-      this.render();
+      if (await this.model.applyExpanded(JSON.parse(store.get(key) ?? '[]') as string[])) {
+        this.render();
+      }
     }
   }
 
@@ -757,8 +776,11 @@ export class Explorer {
     } else if (this.editing === undefined) {
       const expanded = store.get(STORE.expanded(this.rootPath));
       if (expanded !== undefined) {
-        await this.model.applyExpanded(JSON.parse(expanded) as string[]);
-        this.render();
+        // Redraw only on a real change: this runs on every focus, and a
+        // needless rebuild of the tree is visible as a flicker.
+        if (await this.model.applyExpanded(JSON.parse(expanded) as string[])) {
+          this.render();
+        }
       }
     }
     // onLaunch only decides the first window; after that, tabs follow each other.

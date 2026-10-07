@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { setTree, userSettings } from './mock';
+import { files, setTree, userSettings } from './mock';
 import { compareNames, TreeModel } from '../src/model';
 import { loadSettings, SETTINGS_KEY } from '../src/settings';
 
@@ -75,6 +75,23 @@ describe('TreeModel', () => {
     expect(m.expandedPaths()).toEqual([`${R}/a`, `${R}/a/x`, `${R}/a/x/y`]);
   });
 
+  it('reports no change when nothing visible changed, despite hidden files', async () => {
+    const m = model({}, [`${R}/b`]);
+    await m.load(m.root);
+    // The fixture contains an excluded .DS_Store; it must not count as a change.
+    expect(await m.refresh()).toBe(false);
+    expect(await m.refresh()).toBe(false);
+  });
+
+  it('notices a rename even when the number of items is unchanged', async () => {
+    const m = model();
+    await m.load(m.root);
+    files.delete(`${R}/idea2.md`);
+    files.set(`${R}/idea3.md`, '');
+    expect(await m.refresh()).toBe(true);
+    expect(labels(m)).toContain('idea3.md');
+  });
+
   it('picks up external changes on refresh', async () => {
     const m = model();
     await m.load(m.root);
@@ -83,10 +100,11 @@ describe('TreeModel', () => {
     expect(labels(m)).toEqual(['new.md']);
   });
 
-  it('applies expansion saved by another tab', async () => {
+  it('applies expansion saved by another tab, reporting whether it changed', async () => {
     const m = model();
     await m.load(m.root);
-    await m.applyExpanded([`${R}/b`]);
+    expect(await m.applyExpanded([`${R}/b`])).toBe(true);
     expect(labels(m)).toContain('  note.md');
+    expect(await m.applyExpanded([`${R}/b`])).toBe(false);
   });
 });

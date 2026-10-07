@@ -94,7 +94,10 @@ export class TreeModel {
     }
     node.error = false;
     const previous = new Map((node.children ?? []).map((child) => [child.name, child]));
-    let changed = node.children === undefined || previous.size !== entries.length;
+    // Compare what's shown, not the raw listing: hidden entries (.DS_Store,
+    // .git, …) would otherwise make every poll look like a change and rebuild
+    // the whole tree.
+    let changed = node.children === undefined;
 
     const children = entries
       // A .textbundle is a folder on disk; show it as a document when enabled.
@@ -193,9 +196,10 @@ export class TreeModel {
     return walk(this.root);
   }
 
-  /** Matches expansion to a saved list (another tab changed it). */
-  async applyExpanded(paths: string[]): Promise<void> {
+  /** Matches expansion to a saved list (another tab changed it). Returns whether anything changed. */
+  async applyExpanded(paths: string[]): Promise<boolean> {
     const wanted = new Set(paths);
+    let changed = false;
     const walk = async (node: TreeNode): Promise<void> => {
       for (const child of node.children ?? []) {
         if (!child.isDirectory) {
@@ -203,6 +207,7 @@ export class TreeModel {
         }
         const expand = wanted.delete(child.path);
         if (child.expanded !== expand) {
+          changed = true;
           await this.setExpanded(child, expand);
         }
         if (child.expanded) {
@@ -213,6 +218,7 @@ export class TreeModel {
     await walk(this.root);
     // Whatever wasn't found yet expands when it loads.
     this.pendingExpanded = wanted;
+    return changed;
   }
 
   expandedPaths(): string[] {
