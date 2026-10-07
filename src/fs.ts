@@ -1,4 +1,5 @@
 import { MarkEdit } from 'markedit-api';
+import { count } from './perf';
 
 /**
  * Thin wrappers over MarkEdit's file APIs. MarkEdit is sandboxed but holds a
@@ -29,27 +30,74 @@ export const tildify = (path: string) => (path === HOME || path.startsWith(`${HO
 export const untildify = (path: string) => (path === '~' || path.startsWith('~/') ? HOME + path.slice(1) : path);
 export const isWithin = (path: string, dir: string) => path === dir || path.startsWith(dir === '/' ? '/' : `${dir}/`);
 
-// isDirectory/modified rarely change for a given path, so cache lookups to keep
-// polling to one listFiles call per expanded folder.
-const infoCache = new Map<string, { isDirectory: boolean; modified: number }>();
+// Whether a path is a folder rarely changes, so remember it to keep listing a
+// folder to one listFiles call instead of one getFileInfo per entry (MarkEdit
+// answers each on its main thread). The cache lives in localStorage so every
+// tab, including a freshly opened one, shares it.
+const TYPES_KEY = 'mfe.types';
+const MAX_TYPES = 20000;
+const infoCache = new Map<string, { isDirectory: boolean; modified: number }>(loadTypes());
+let persistTimer: ReturnType<typeof setTimeout> | undefined;
+// Folders forgotten since the last save; their entries are dropped from storage too.
+const forgotten: string[] = [];
+
+function loadTypes(): [string, { isDirectory: boolean; modified: number }][] {
+  try {
+    const stored = JSON.parse(localStorage.getItem(TYPES_KEY) ?? '{}') as Record<string, 0 | 1>;
+    return Object.entries(stored).map(([path, dir]) => [path, { isDirectory: dir === 1, modified: 0 }]);
+  } catch {
+    return [];
+  }
+}
+
+function persistTypes(): void {
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(() => {
+    // Merge with what other tabs saved meanwhile, newest entries last.
+    const merged = new Map(loadTypes());
+    for (const path of merged.keys()) {
+      if (forgotten.some((root) => isWithin(path, root))) {
+        merged.delete(path);
+      }
+    }
+    forgotten.length = 0;
+    for (const [path, value] of infoCache) {
+      merged.delete(path);
+      merged.set(path, value);
+    }
+    const entries = [...merged].slice(-MAX_TYPES);
+    try {
+      localStorage.setItem(TYPES_KEY, JSON.stringify(Object.fromEntries(entries.map(([p, v]) => [p, v.isDirectory ? 1 : 0]))));
+    } catch {
+      // Storage full or unavailable: the in-memory cache still works.
+    }
+  }, 500);
+}
 
 export async function info(path: string): Promise<{ isDirectory: boolean; modified: number } | undefined> {
+  count('getFileInfo');
   const result = await MarkEdit.getFileInfo(path);
   if (result === undefined) {
     infoCache.delete(path);
     return undefined;
   }
   const value = { isDirectory: result.isDirectory, modified: new Date(result.modificationDate).getTime() };
+  const known = infoCache.get(path);
   infoCache.set(path, value);
+  if (known?.isDirectory !== value.isDirectory) {
+    persistTypes();
+  }
   return value;
 }
 
 export async function exists(path: string): Promise<boolean> {
+  count('getFileInfo');
   return (await MarkEdit.getFileInfo(path)) !== undefined;
 }
 
 /** Lists a folder, or returns undefined if it can't be read. */
 export async function list(dir: string, needsModified = false): Promise<Entry[] | undefined> {
+  count('listFiles');
   const names = await MarkEdit.listFiles(dir);
   if (names === undefined) {
     return undefined;
@@ -71,6 +119,8 @@ export function forget(path: string): void {
       infoCache.delete(key);
     }
   }
+  forgotten.push(path);
+  persistTypes();
 }
 
 export async function move(source: string, destination: string): Promise<boolean> {

@@ -45,28 +45,44 @@ const TONE_TAGS: Record<Tone, Tag[]> = {
   grey: [tags.comment, tags.meta, tags.punctuation],
 };
 
-/** The colors the current theme gives a tone's tokens (distinct from body text). */
-function tokenColors(view: EditorView, tagList: Tag[], textColor: string): string[] {
-  const colors: string[] = [];
-  for (const tag of tagList) {
-    const className = highlightingFor(view.state, [tag]);
-    if (className === null) {
-      continue;
-    }
-    // Probe inside the editor root (where theme rules are scoped) but outside
-    // contentDOM, which CodeMirror watches for edits.
-    const probe = document.createElement('span');
-    probe.className = className;
-    probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
-    view.dom.appendChild(probe);
-    const color = getComputedStyle(probe).color;
-    probe.remove();
-    if (color !== '' && color !== textColor) {
-      colors.push(color);
+/**
+ * The colors the current theme gives each tone's tokens (distinct from body
+ * text). All probes are measured in one batch so the browser recalculates
+ * styles once, not once per token.
+ */
+function probeTones(view: EditorView, textColor: string): Record<Tone, string[]> {
+  const probes: { tone: Tone; element: HTMLElement }[] = [];
+  const fragment = document.createDocumentFragment();
+  for (const tone of TONES) {
+    for (const tag of TONE_TAGS[tone]) {
+      const className = highlightingFor(view.state, [tag]);
+      if (className === null) {
+        continue;
+      }
+      const element = document.createElement('span');
+      element.className = className;
+      element.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none';
+      fragment.appendChild(element);
+      probes.push({ tone, element });
     }
   }
-  return colors;
+  // Inside the editor root (where theme rules are scoped) but outside
+  // contentDOM, which CodeMirror watches for edits.
+  view.dom.appendChild(fragment);
+  const result = Object.fromEntries(TONES.map((tone) => [tone, [] as string[]])) as Record<Tone, string[]>;
+  for (const { tone, element } of probes) {
+    const color = getComputedStyle(element).color;
+    if (color !== '' && color !== textColor) {
+      result[tone].push(color);
+    }
+  }
+  probes.forEach(({ element }) => element.remove());
+  return result;
 }
+
+// Theme colors only change with the theme, so resolve once per theme and share
+// the answer with other tabs.
+const memo = new Map<string, Record<Tone, string>>();
 
 export function toneColors(mode: IconColorMode, view: EditorView): Record<Tone, string> {
   if (mode === 'seti') {
@@ -75,16 +91,40 @@ export function toneColors(mode: IconColorMode, view: EditorView): Record<Tone, 
   if (mode === 'monochrome') {
     return Object.fromEntries(TONES.map((tone) => [tone, 'var(--mfe-muted)'])) as Record<Tone, string>;
   }
-  const textColor = getComputedStyle(view.contentDOM).color;
+  const editorStyle = getComputedStyle(view.contentDOM);
+  const textColor = editorStyle.color;
+  const theme = (window as { config?: { theme?: string } }).config?.theme ?? '';
+  const key = `mfe.tones:${theme}|${getComputedStyle(view.dom).backgroundColor}|${textColor}`;
+  const cached = memo.get(key) ?? readStored(key);
+  if (cached !== undefined) {
+    memo.set(key, cached);
+    return cached;
+  }
+
+  const candidates = probeTones(view, textColor);
   const used = new Set<string>();
   const result = {} as Record<Tone, string>;
   // Most common badges first: Markdown (blue) and plain files (grey).
   for (const tone of RESOLVE_ORDER) {
-    const candidates = tokenColors(view, TONE_TAGS[tone], textColor);
     // Prefer an unused theme color, then any theme color, then Seti.
-    const color = candidates.find((c) => !used.has(c)) ?? candidates[0] ?? SETI[tone];
+    const color = candidates[tone].find((c) => !used.has(c)) ?? candidates[tone][0] ?? SETI[tone];
     used.add(color);
     result[tone] = color;
   }
+  memo.set(key, result);
+  try {
+    localStorage.setItem(key, JSON.stringify(result));
+  } catch {
+    // Not shared, still memoized for this tab.
+  }
   return result;
+}
+
+function readStored(key: string): Record<Tone, string> | undefined {
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? undefined : (JSON.parse(value) as Record<Tone, string>);
+  } catch {
+    return undefined;
+  }
 }

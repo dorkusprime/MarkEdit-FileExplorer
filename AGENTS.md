@@ -25,7 +25,8 @@ src/model.ts        TreeModel: lazy folder loading, sorting, compact rows, revea
 src/fs.ts           wrappers over MarkEdit's file APIs (trash, copy, case-only rename…)
 src/layout.ts       makes room beside the editor; coexists with the Outline Sidebar
 src/settings.ts     settings.json parsing/validation, MarkEdit-openable file types, writes
-src/styles.ts       panel CSS (theme colors and metrics via CSS variables)
+src/styles.css      panel CSS (theme colors and metrics via CSS variables), bundled via `?inline`
+src/perf.ts         startup marks + file-API call counts (MarkEditFileExplorer.perf())
 src/icons.ts        codicon-style glyphs + Seti-style file badges (glyph + tone)
 src/colors.ts       resolves badge tones per fileIconColors (theme probes syntax token colors)
 src/menu.ts         Extensions-menu commands, toolbar button helper
@@ -51,6 +52,9 @@ These were all found the hard way; keep them in mind before "simplifying" the re
 - **Re-rendering the tree on mousedown breaks click/dblclick/drag** (the target element disappears). Selection changes use `paint()` (class toggles); structural changes use `render()`.
 - **The Outline Sidebar** sets `body.width` and both margins wholesale. `Layout` observes those writes and re-applies the combined insets, and offsets our panel when both dock on the same side. It also overrides the active-line indicator offset.
 - **AppleScript `evaluate`** only works with `with callAsyncJavaScript` (the plain form errors with a missing parameter), so script bodies must `return` a value. JXA mangles the parameter name; use AppleScript.
+- **Every file-API call is answered on MarkEdit's main thread**, so bursts of them (e.g. a `getFileInfo` per folder entry) make the whole app sluggish while a tab opens. Folder/file types are therefore cached in `localStorage` (`mfe.types`, shared by all tabs), tabs build their tree only once focused (`treeWanted`), and theme badge colors are probed in one batch and cached per theme (`mfe.tones:*`). Check with `MarkEditFileExplorer.perf()`: a new tab should show ~1–2 `getFileInfo` and one `listFiles` per expanded folder.
+- **Opening a document takes ~1 s in MarkEdit itself** (measured on macOS 26, with and without any extensions, via `open -a`, AppleScript `open` and `MarkEdit.openFile` alike), so don't chase that in this extension.
+- **CSS ships inside the script**: extensions are a single `.js` file, so `styles.css` is imported with `?inline` and injected at mount. Keep styling in the CSS file; only per-row/per-setting values belong in TypeScript.
 - **Documents are recorded by real path**, so callers of `openFolder` should resolve symlinks (the CLI does).
 
 ## Testing

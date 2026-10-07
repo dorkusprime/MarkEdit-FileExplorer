@@ -144,5 +144,5 @@ tell application "MarkEdit" to evaluate document 1 ¬
 ```
 
 API: `openFolder(path, { focus })`, `open({ focus })`, `close()`, `toggle()`,
-`root()`, `version`. Pass real paths (not symlinks); MarkEdit records documents
+`root()`, `version`, and `perf()` (startup timings and file-API call counts). Pass real paths (not symlinks); MarkEdit records documents
 by their real path, and the CLI resolves symlinks for you.

@@ -8,7 +8,9 @@ import { TreeModel } from './model';
 import type { Row , TreeNode } from './model';
 import type { ExplorerSettings } from './settings';
 import { isOpenable, writeSetting } from './settings';
-import { CSS } from './styles';
+// Real CSS, bundled as a minified string (MarkEdit extensions ship as one .js file).
+import CSS from './styles.css?inline';
+import { mark } from './perf';
 import { TONES, toneColors } from './colors';
 
 const STORE = {
@@ -78,6 +80,11 @@ export class Explorer {
   private dragPaths: string[] = [];
   private dragExpandTimer: ReturnType<typeof setTimeout> | undefined;
   private pendingMouseUp: ((event: MouseEvent) => void) | undefined;
+  /**
+   * Whether this tab has needed its tree yet. Background tabs (every restored
+   * tab at launch) defer reading the filesystem until first focused.
+   */
+  private treeWanted = false;
 
   constructor(private settings: ExplorerSettings) {
     this.width = clampWidth(Number(store.get(STORE.width)) || settings.defaultWidth);
@@ -96,6 +103,7 @@ export class Explorer {
   // ---------------------------------------------------------------- lifecycle
 
   async mount(): Promise<void> {
+    mark('mount:start');
     const style = document.createElement('style');
     style.textContent = CSS;
     document.documentElement.style.setProperty('--mfe-row-height', `${this.settings.rowHeight}px`);
@@ -134,8 +142,12 @@ export class Explorer {
     this.activeFile = current?.filePath;
     const savedRoot = store.get(STORE.root);
     const rootPath = savedRoot !== undefined && (await fs.info(savedRoot))?.isDirectory ? savedRoot : (current?.parentPath ?? fs.HOME);
+    mark('mount:rootChosen');
+    this.treeWanted = document.hasFocus();
     await this.setRoot(rootPath, false);
+    mark('mount:rootLoaded');
     this.applyTheme();
+    mark('mount:done');
   }
 
   shouldStartOpen(): boolean {
@@ -160,6 +172,7 @@ export class Explorer {
       void this.refresh();
     }
     if (focus) {
+      void this.ensureTree();
       this.tree.focus();
     }
   }
@@ -209,7 +222,7 @@ export class Explorer {
   async onEditorReady(): Promise<void> {
     const current = await MarkEdit.getFileInfo();
     this.activeFile = current?.filePath;
-    if (this.settings.autoReveal && this.activeFile !== undefined) {
+    if (this.treeWanted && this.settings.autoReveal && this.activeFile !== undefined) {
       await this.revealPath(this.activeFile, false);
     } else {
       this.render();
@@ -235,11 +248,28 @@ export class Explorer {
     if (persist) {
       store.set(STORE.root, path);
     }
+    if (this.treeWanted) {
+      await this.loadTree();
+    } else {
+      this.render();
+    }
+  }
+
+  /** Reads the root folder (and remembered expansion), then reveals the active file. */
+  private async loadTree(): Promise<void> {
     await this.model.load(this.model.root);
-    if (this.settings.autoReveal && this.activeFile !== undefined && fs.isWithin(this.activeFile, path)) {
+    if (this.settings.autoReveal && this.activeFile !== undefined && fs.isWithin(this.activeFile, this.rootPath)) {
       await this.revealPath(this.activeFile, false);
     } else {
       this.render();
+    }
+  }
+
+  /** Loads the tree the first time this tab actually needs it. */
+  async ensureTree(): Promise<void> {
+    if (!this.treeWanted) {
+      this.treeWanted = true;
+      await this.loadTree();
     }
   }
 
@@ -268,7 +298,9 @@ export class Explorer {
     if ((await fs.info(normalized))?.isDirectory !== true) {
       return false;
     }
-    if (normalized !== this.rootPath) {
+    // An explicit request: load even if this tab isn't focused.
+    this.treeWanted = true;
+    if (normalized !== this.rootPath || this.model.root.children === undefined) {
       await this.setRoot(normalized);
     }
     this.open(focus);
@@ -374,7 +406,7 @@ export class Explorer {
 
     if (this.model.root.error) {
       fragment.appendChild(this.emptyState('MarkEdit can’t read this folder.'));
-    } else if (this.rows.length === 0 && this.editing === undefined) {
+    } else if (this.rows.length === 0 && this.editing === undefined && this.model.root.children !== undefined) {
       fragment.appendChild(this.emptyState('This folder is empty.'));
     }
 
@@ -679,15 +711,16 @@ export class Explorer {
     // Each MarkEdit tab is its own page running its own explorer. Mirror the
     // shared state so switching tabs doesn't make the sidebar jump around.
     window.addEventListener('storage', (event) => void this.onStorage(event.key));
-    const resync = () => {
-      void this.syncFromStore();
+    const resync = async () => {
+      await this.syncFromStore();
       if (this.opened) {
         this.applyTheme();
+        await this.ensureTree();
         void this.refresh();
       }
     };
-    window.addEventListener('focus', resync);
-    document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && resync());
+    window.addEventListener('focus', () => void resync());
+    document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && void resync());
   }
 
   private async onStorage(key: string | null): Promise<void> {

@@ -5,6 +5,9 @@ import { loadSettings } from './src/settings';
 import { installMenu } from './src/menu';
 import { startDebug } from './src/debug';
 import { exposeAPI } from './src/api';
+import { mark } from './src/perf';
+
+mark('script:start');
 
 const settings = loadSettings();
 const explorer = new Explorer(settings);
@@ -17,6 +20,7 @@ let mounted: Promise<void> | undefined;
 let readyEditor: unknown;
 
 function start(editor: unknown): void {
+  mark('editor:ready');
   if (readyEditor === editor) {
     return;
   }
@@ -28,6 +32,7 @@ function start(editor: unknown): void {
       } else {
         explorer.close();
       }
+      mark('open:done');
       resolveMounted();
     });
   } else {

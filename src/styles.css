@@ -1,10 +1,9 @@
-/**
+/*
  * Panel CSS. Defaults follow VS Code's explorer (22px rows, 8px indent, 16px
  * twistie, 13px labels, 11px uppercase headers); rows, fonts and indent
- * guides are configurable via CSS variables / classes set in sidebar.ts. Colors are derived from the
- * live editor theme via --mfe-bg / --mfe-fg, set in sidebar.ts.
+ * guides are configurable via CSS variables / classes set in sidebar.ts.
+ * Colors are derived from the live editor theme via --mfe-bg / --mfe-fg.
  */
-export const CSS = `
 .mfe {
   --mfe-panel: color-mix(in srgb, var(--mfe-fg) 4%, var(--mfe-bg));
   --mfe-hover: color-mix(in srgb, var(--mfe-fg) 7%, transparent);
@@ -243,4 +242,3 @@ html.mfe-push .cm-md-activeLine {
   font: inherit;
   cursor: pointer;
 }
-`;
