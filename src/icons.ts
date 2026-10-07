@@ -1,6 +1,6 @@
 /**
  * Codicon-style UI glyphs (16×16, stroked with currentColor) and Seti-style
- * file badges. Seti, VS Code's default icon theme, shows no folder icons —
+ * file badges (glyph + tone; see colors.ts for how tones become colors). Seti, VS Code's default icon theme, shows no folder icons —
  * only the chevron — so folders get none here either.
  */
 
@@ -17,90 +17,92 @@ export const ICONS = {
   folderOpen: svg('<path d="M1.5 12.5v-9a1 1 0 0 1 1-1h3.6l1.5 1.5h5.9a1 1 0 0 1 1 1v1.5"/><path d="M1.5 12.5l2-5.5h11l-2 5.5z"/>'),
 };
 
+/** Badge colors are named tones, resolved per `fileIconColors` in colors.ts. */
+export type Tone = 'blue' | 'yellow' | 'orange' | 'green' | 'purple' | 'red' | 'pink' | 'grey';
+
 interface Badge {
   text: string;
-  color: string;
+  tone: Tone;
 }
 
-// Colors follow Seti's palette.
-const BLUE = '#519aba';
-const YELLOW = '#cbcb41';
-const ORANGE = '#e37933';
-const GREEN = '#8dc149';
-const PURPLE = '#a074c4';
-const RED = '#cc3e44';
-const PINK = '#f55385';
-const GREY = '#6d8086';
+const BLUE: Tone = 'blue';
+const YELLOW: Tone = 'yellow';
+const ORANGE: Tone = 'orange';
+const GREEN: Tone = 'green';
+const PURPLE: Tone = 'purple';
+const RED: Tone = 'red';
+const PINK: Tone = 'pink';
+const GREY: Tone = 'grey';
 
 const BY_EXTENSION: Record<string, Badge> = {
-  md: { text: 'M↓', color: BLUE },
-  markdown: { text: 'M↓', color: BLUE },
-  mdx: { text: 'M↓', color: YELLOW },
-  qmd: { text: 'M↓', color: BLUE },
-  rmd: { text: 'M↓', color: BLUE },
-  textbundle: { text: 'M↓', color: PURPLE },
-  tex: { text: 'TeX', color: GREEN },
-  ltx: { text: 'TeX', color: GREEN },
-  mmd: { text: '◇', color: PINK },
-  mermaid: { text: '◇', color: PINK },
-  log: { text: '≡', color: GREY },
-  txt: { text: '≡', color: GREY },
-  json: { text: '{}', color: YELLOW },
-  jsonc: { text: '{}', color: YELLOW },
-  js: { text: 'JS', color: YELLOW },
-  mjs: { text: 'JS', color: YELLOW },
-  cjs: { text: 'JS', color: YELLOW },
-  jsx: { text: '⚛', color: BLUE },
-  ts: { text: 'TS', color: BLUE },
-  mts: { text: 'TS', color: BLUE },
-  tsx: { text: '⚛', color: BLUE },
-  html: { text: '<>', color: ORANGE },
-  htm: { text: '<>', color: ORANGE },
-  xml: { text: '<>', color: ORANGE },
-  css: { text: '#', color: BLUE },
-  scss: { text: '#', color: PINK },
-  py: { text: 'py', color: BLUE },
-  rb: { text: 'rb', color: RED },
-  go: { text: 'go', color: BLUE },
-  rs: { text: 'rs', color: GREY },
-  swift: { text: 'sw', color: ORANGE },
-  java: { text: 'J', color: RED },
-  kt: { text: 'K', color: ORANGE },
-  c: { text: 'C', color: BLUE },
-  h: { text: 'h', color: PURPLE },
-  cpp: { text: 'C+', color: BLUE },
-  sh: { text: '$', color: GREEN },
-  zsh: { text: '$', color: GREEN },
-  bash: { text: '$', color: GREEN },
-  yml: { text: '!', color: PURPLE },
-  yaml: { text: '!', color: PURPLE },
-  toml: { text: '⚙', color: GREY },
-  ini: { text: '⚙', color: GREY },
-  env: { text: '⚙', color: GREY },
-  lock: { text: '⊙', color: GREY },
-  csv: { text: '▦', color: GREEN },
-  pdf: { text: 'PDF', color: RED },
-  png: { text: '▣', color: PURPLE },
-  jpg: { text: '▣', color: PURPLE },
-  jpeg: { text: '▣', color: PURPLE },
-  gif: { text: '▣', color: PURPLE },
-  webp: { text: '▣', color: PURPLE },
-  svg: { text: '▣', color: YELLOW },
-  ico: { text: '▣', color: YELLOW },
-  zip: { text: '▤', color: GREY },
+  md: { text: 'M↓', tone: BLUE },
+  markdown: { text: 'M↓', tone: BLUE },
+  mdx: { text: 'M↓', tone: YELLOW },
+  qmd: { text: 'M↓', tone: BLUE },
+  rmd: { text: 'M↓', tone: BLUE },
+  textbundle: { text: 'M↓', tone: PURPLE },
+  tex: { text: 'TeX', tone: GREEN },
+  ltx: { text: 'TeX', tone: GREEN },
+  mmd: { text: '◇', tone: PINK },
+  mermaid: { text: '◇', tone: PINK },
+  log: { text: '≡', tone: GREY },
+  txt: { text: '≡', tone: GREY },
+  json: { text: '{}', tone: YELLOW },
+  jsonc: { text: '{}', tone: YELLOW },
+  js: { text: 'JS', tone: YELLOW },
+  mjs: { text: 'JS', tone: YELLOW },
+  cjs: { text: 'JS', tone: YELLOW },
+  jsx: { text: '⚛', tone: BLUE },
+  ts: { text: 'TS', tone: BLUE },
+  mts: { text: 'TS', tone: BLUE },
+  tsx: { text: '⚛', tone: BLUE },
+  html: { text: '<>', tone: ORANGE },
+  htm: { text: '<>', tone: ORANGE },
+  xml: { text: '<>', tone: ORANGE },
+  css: { text: '#', tone: BLUE },
+  scss: { text: '#', tone: PINK },
+  py: { text: 'py', tone: BLUE },
+  rb: { text: 'rb', tone: RED },
+  go: { text: 'go', tone: BLUE },
+  rs: { text: 'rs', tone: GREY },
+  swift: { text: 'sw', tone: ORANGE },
+  java: { text: 'J', tone: RED },
+  kt: { text: 'K', tone: ORANGE },
+  c: { text: 'C', tone: BLUE },
+  h: { text: 'h', tone: PURPLE },
+  cpp: { text: 'C+', tone: BLUE },
+  sh: { text: '$', tone: GREEN },
+  zsh: { text: '$', tone: GREEN },
+  bash: { text: '$', tone: GREEN },
+  yml: { text: '!', tone: PURPLE },
+  yaml: { text: '!', tone: PURPLE },
+  toml: { text: '⚙', tone: GREY },
+  ini: { text: '⚙', tone: GREY },
+  env: { text: '⚙', tone: GREY },
+  lock: { text: '⊙', tone: GREY },
+  csv: { text: '▦', tone: GREEN },
+  pdf: { text: 'PDF', tone: RED },
+  png: { text: '▣', tone: PURPLE },
+  jpg: { text: '▣', tone: PURPLE },
+  jpeg: { text: '▣', tone: PURPLE },
+  gif: { text: '▣', tone: PURPLE },
+  webp: { text: '▣', tone: PURPLE },
+  svg: { text: '▣', tone: YELLOW },
+  ico: { text: '▣', tone: YELLOW },
+  zip: { text: '▤', tone: GREY },
 };
 
 const BY_NAME: Record<string, Badge> = {
-  'package.json': { text: 'npm', color: RED },
-  'readme.md': { text: 'ⓘ', color: BLUE },
-  license: { text: '⚖', color: YELLOW },
-  'license.md': { text: '⚖', color: YELLOW },
-  '.gitignore': { text: '◆', color: GREY },
-  dockerfile: { text: 'D', color: BLUE },
-  makefile: { text: 'M', color: ORANGE },
+  'package.json': { text: 'npm', tone: RED },
+  'readme.md': { text: 'ⓘ', tone: BLUE },
+  license: { text: '⚖', tone: YELLOW },
+  'license.md': { text: '⚖', tone: YELLOW },
+  '.gitignore': { text: '◆', tone: GREY },
+  dockerfile: { text: 'D', tone: BLUE },
+  makefile: { text: 'M', tone: ORANGE },
 };
 
-const DEFAULT: Badge = { text: '≡', color: GREY };
+const DEFAULT: Badge = { text: '≡', tone: GREY };
 
 export function fileBadge(name: string): Badge {
   const lower = name.toLowerCase();

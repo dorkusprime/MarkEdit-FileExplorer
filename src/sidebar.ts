@@ -9,6 +9,7 @@ import type { Row , TreeNode } from './model';
 import type { ExplorerSettings } from './settings';
 import { isOpenable, writeSetting } from './settings';
 import { CSS } from './styles';
+import { TONES, toneColors } from './colors';
 
 const STORE = {
   open: 'mfe.open',
@@ -439,7 +440,7 @@ export class Explorer {
       const badge = fileBadge(node.name);
       const icon = el('span', 'mfe-icon');
       icon.textContent = badge.text;
-      icon.style.color = badge.color;
+      icon.style.color = `var(--mfe-badge-${badge.tone})`;
       element.appendChild(icon);
     }
 
@@ -482,7 +483,7 @@ export class Explorer {
     const updateIcon = () => {
       const badge = fileBadge(input.value || 'file');
       icon.textContent = badge.text;
-      icon.style.color = badge.color;
+      icon.style.color = `var(--mfe-badge-${badge.tone})`;
     };
     const validate = (): boolean => {
       const result = this.validateName(input.value, editing);
@@ -590,6 +591,10 @@ export class Explorer {
       this.root.style.setProperty('--mfe-font', family);
     }
     this.root.style.setProperty('--mfe-font-size', fontSize === 'editor' ? editorFont.fontSize : `${fontSize}px`);
+    const tones = toneColors(this.settings.fileIconColors, view);
+    for (const tone of TONES) {
+      this.root.style.setProperty(`--mfe-badge-${tone}`, tones[tone]);
+    }
   }
 
   /** Theme extensions repaint asynchronously after an appearance change. */

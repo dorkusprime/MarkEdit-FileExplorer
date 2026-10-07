@@ -23,6 +23,8 @@ export interface ExplorerSettings {
   indent: number;
   indentGuides: 'onHover' | 'always' | 'none';
   fileIcons: boolean;
+  /** Badge colors: from the editor theme's syntax colors, VS Code's Seti palette, or muted text. */
+  fileIconColors: 'theme' | 'seti' | 'monochrome';
   compactFolders: boolean;
   // Files shown
   exclude: Record<string, boolean>;
@@ -56,6 +58,7 @@ export const DEFAULTS: ExplorerSettings = {
   indent: 8,
   indentGuides: 'onHover',
   fileIcons: true,
+  fileIconColors: 'theme',
   compactFolders: true,
   // VS Code's files.exclude defaults, matched against file/folder names.
   exclude: { '.git': true, '.svn': true, '.hg': true, '.jj': true, '.DS_Store': true, 'Thumbs.db': true },
@@ -101,6 +104,7 @@ export function loadSettings(): ExplorerSettings {
     indent: pick('indent', between(0, 40)),
     indentGuides: pick('indentGuides', oneOf('onHover', 'always', 'none')),
     fileIcons: pick('fileIcons', isBool),
+    fileIconColors: pick('fileIconColors', oneOf('theme', 'seti', 'monochrome')),
     compactFolders: pick('compactFolders', isBool),
     exclude,
     showHiddenFiles: pick('showHiddenFiles', isBool),

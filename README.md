@@ -41,6 +41,7 @@ shown are the defaults.
   "indent": 8,
   "indentGuides": "onHover",
   "fileIcons": true,
+  "fileIconColors": "theme",
   "compactFolders": true,
 
   "exclude": { ".git": true, ".svn": true, ".hg": true, ".jj": true, ".DS_Store": true, "Thumbs.db": true },
@@ -71,6 +72,7 @@ shown are the defaults.
 | `indent` | 0–40 | Indent per level in px (VS Code's `workbench.tree.indent`). |
 | `indentGuides` | `"onHover"` \| `"always"` \| `"none"` | When to draw indent guides (VS Code's `workbench.tree.renderIndentGuides`). |
 | `fileIcons` | boolean | Show file-type badges. |
+| `fileIconColors` | `"theme"` \| `"seti"` \| `"monochrome"` | Badge colors: taken from your MarkEdit theme's syntax colors, VS Code's Seti palette, or muted text. |
 | `compactFolders` | boolean | Render single-child folder chains as one row, e.g. `src/vs/base` (VS Code's `explorer.compactFolders`). |
 | **Files shown** | | |
 | `exclude` | `{ glob: boolean }` | Names to hide; `*` and `?` wildcards; `**/` prefixes are accepted. Set a default to `false` to show it. |

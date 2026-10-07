@@ -26,7 +26,8 @@ src/fs.ts           wrappers over MarkEdit's file APIs (trash, copy, case-only r
 src/layout.ts       makes room beside the editor; coexists with the Outline Sidebar
 src/settings.ts     settings.json parsing/validation, MarkEdit-openable file types, writes
 src/styles.ts       panel CSS (theme colors and metrics via CSS variables)
-src/icons.ts        codicon-style glyphs + Seti-style file badges
+src/icons.ts        codicon-style glyphs + Seti-style file badges (glyph + tone)
+src/colors.ts       resolves badge tones per fileIconColors (theme probes syntax token colors)
 src/menu.ts         Extensions-menu commands, toolbar button helper
 src/api.ts          window.MarkEditFileExplorer (for AppleScript `evaluate`)
 src/debug.ts        dev-only harness, compiled out unless MFE_DEBUG=1

@@ -29,9 +29,11 @@
     "uninstall": "rm ~/Library/Containers/app.cyan.markedit/Data/Documents/scripts/markedit-file-explorer.js"
   },
   "devDependencies": {
+    "@codemirror/language": "^6.12.4",
     "@codemirror/state": "^6.0.0",
     "@codemirror/view": "^6.0.0",
     "@eslint/js": "^9.39.5",
+    "@lezer/highlight": "^1.2.5",
     "eslint": "^9.39.5",
     "happy-dom": "^20.14.5",
     "markedit-api": "https://github.com/MarkEdit-app/MarkEdit-api#v0.36.0",

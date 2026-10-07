@@ -14,7 +14,9 @@ export const CSS = `
   --mfe-guide: color-mix(in srgb, var(--mfe-fg) 22%, transparent);
   --mfe-muted: color-mix(in srgb, var(--mfe-fg) 60%, transparent);
   --mfe-border: color-mix(in srgb, var(--mfe-fg) 10%, transparent);
-  --mfe-error: #e5484d;
+  /* macOS system colors: adapt to light/dark mode and accessibility settings. */
+  --mfe-error: -apple-system-red;
+  --mfe-warning: -apple-system-orange;
   position: fixed;
   top: 0;
   bottom: 0;
@@ -218,8 +220,8 @@ html.mfe-push .cm-md-activeLine {
   white-space: normal;
 }
 .mfe-message.mfe-warning {
-  border-color: #c69026;
-  background: color-mix(in srgb, #c69026 18%, var(--mfe-bg));
+  border-color: var(--mfe-warning);
+  background: color-mix(in srgb, var(--mfe-warning) 18%, var(--mfe-bg));
 }
 
 .mfe-empty {
@@ -236,6 +238,7 @@ html.mfe-push .cm-md-activeLine {
   border: none;
   border-radius: 4px;
   background: var(--mfe-accent);
+  /* AccentColorText resolves to black on a blue accent in MarkEdit's WebKit. */
   color: white;
   font: inherit;
   cursor: pointer;

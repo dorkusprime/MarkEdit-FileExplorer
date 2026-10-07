@@ -11,3 +11,4 @@ First version.
 - Shares the window with the Outline Sidebar extension; state is shared across tabs.
 - `window.MarkEditFileExplorer` API and `bin/markedit-explorer` CLI for opening folders from other tools.
 - Configurable fonts, sizes, indent, guides, icons, sorting, excludes, open mode and more.
+- File badges take their colors from the editor theme by default (`fileIconColors`); validation messages use macOS system colors.
