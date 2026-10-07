@@ -1,0 +1,58 @@
+name: Release
+
+# Push a tag like v0.2.0 (matching package.json) to publish a GitHub release
+# with the built script attached, ready for the MarkEdit extension registry.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+      - run: npm ci
+
+      - name: Tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "::error::Tag $GITHUB_REF_NAME != package.json v$version"; exit 1; }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - run: npm run check
+      - run: npx vite build
+      - name: Committed dist/ matches the build
+        run: git diff --exit-code -- dist/
+
+      - name: Write release notes
+        run: |
+          asset=dist/markedit-file-explorer.js
+          sha=$(sha256sum "$asset" | cut -d' ' -f1)
+          url="https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/markedit-file-explorer.js"
+          # This version's CHANGELOG section (between its heading and the next).
+          notes=$(awk -v v="$VERSION" '$0 ~ "^## " v "( |$)" {on=1; next} /^## / {on=0} on' CHANGELOG.md)
+          {
+            echo "$notes"
+            echo
+            echo "**SHA-256:** \`$sha\`"
+            echo
+            echo "<details><summary>Registry entry (<code>versions</code> item)</summary>"
+            echo
+            echo '```json'
+            echo "{ \"version\": \"$VERSION\", \"url\": \"$url\", \"sha256\": \"$sha\", \"notes\": \"\" }"
+            echo '```'
+            echo "</details>"
+          } > release-notes.md
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/markedit-file-explorer.js --title "$GITHUB_REF_NAME" --notes-file release-notes.md

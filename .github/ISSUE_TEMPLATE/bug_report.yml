@@ -1,0 +1,35 @@
+name: Bug report
+description: Something in the File Explorer doesn't work as expected.
+title: '[Bug] '
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Screenshots or recordings help a lot.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Settings
+      description: Your `extension.markeditFileExplorer` block from settings.json, if any.
+      render: json
+  - type: input
+    attributes:
+      label: MarkEdit version
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: File Explorer version
+      description: Shown by `MarkEditFileExplorer.version`, or the release you installed.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: macOS version
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Other extensions installed
+      description: Especially other sidebars or themes.

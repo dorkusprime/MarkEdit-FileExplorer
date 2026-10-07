@@ -1,0 +1,14 @@
+name: Feature request
+description: Suggest an improvement.
+title: '[Feature] '
+body:
+  - type: textarea
+    attributes:
+      label: What would you like?
+      description: If it's something VS Code's explorer does, say so — matching it is a goal.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Why
+      description: The workflow this would help with.

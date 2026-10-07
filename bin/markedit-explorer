@@ -1,0 +1,49 @@
+#!/bin/zsh
+# Drive the MarkEdit File Explorer extension from the command line.
+#
+#   markedit-explorer open-folder <dir> [--focus]   show <dir> in the explorer
+#   markedit-explorer toggle | open | close
+#
+# Uses MarkEdit's AppleScript `evaluate` command to call
+# window.MarkEditFileExplorer in a document. Explorer state is shared by every
+# tab, so the first document is enough; if none is open, an untitled one is made.
+set -euo pipefail
+
+usage() { sed -n '3,6p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+js_for() {
+  case $1 in
+    open-folder)
+      [[ -n ${2:-} ]] || usage
+      # MarkEdit records files by their real path, so resolve symlinks first.
+      local dir; dir=$(/bin/realpath "$2") || { echo "No such folder: $2" >&2; exit 1; }
+      [[ -d $dir ]] || { echo "Not a folder: $2" >&2; exit 1; }
+      local focus=false; [[ ${3:-} == --focus ]] && focus=true
+      # Base64 keeps quotes/spaces in the path from breaking the AppleScript string.
+      local b64; b64=$(printf %s "$dir" | base64)
+      print -r -- "const p = new TextDecoder().decode(Uint8Array.from(atob('$b64'), c => c.charCodeAt(0))); return await MarkEditFileExplorer.openFolder(p, { focus: $focus })" ;;
+    open)   print -r -- "await MarkEditFileExplorer.open({ focus: true }); return true" ;;
+    close)  print -r -- "await MarkEditFileExplorer.close(); return true" ;;
+    toggle) print -r -- "await MarkEditFileExplorer.toggle(); return true" ;;
+    *) usage ;;
+  esac
+}
+
+[[ $# -ge 1 ]] || usage
+js=$(js_for "$@")
+
+osascript -e 'tell application "MarkEdit"
+  activate
+  if (count documents) is 0 then make new document
+end tell' >/dev/null
+
+# Right after launch or opening a file the document/extension may not be ready.
+for _ in {1..30}; do
+  if result=$(osascript -e "tell application \"MarkEdit\" to evaluate document 1 JavaScript \"$js\" with callAsyncJavaScript" 2>/dev/null); then
+    [[ $result == false ]] && { echo "MarkEdit couldn't open that folder." >&2; exit 1; }
+    exit 0
+  fi
+  sleep 0.2
+done
+echo "MarkEdit File Explorer didn't respond (is the extension installed?)" >&2
+exit 1

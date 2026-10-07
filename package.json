@@ -1,0 +1,44 @@
+{
+  "name": "markedit-file-explorer",
+  "version": "0.1.0",
+  "description": "A VS Code-style file explorer sidebar for MarkEdit.",
+  "author": "dorkusprime",
+  "license": "MIT",
+  "private": true,
+  "homepage": "https://github.com/dorkusprime/MarkEdit-FileExplorer",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dorkusprime/MarkEdit-FileExplorer.git"
+  },
+  "markeditRegistry": {
+    "id": "markedit-file-explorer",
+    "name": "File Explorer"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run check && vite build",
+    "build:debug": "MFE_DEBUG=1 vite build",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "fixture": "scripts/make-fixture.sh",
+    "reload": "osascript -e 'quit app \"MarkEdit\"' -e 'delay 1' -e 'launch app \"MarkEdit\"'",
+    "uninstall": "rm ~/Library/Containers/app.cyan.markedit/Data/Documents/scripts/markedit-file-explorer.js"
+  },
+  "devDependencies": {
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "happy-dom": "^20.14.5",
+    "markedit-api": "https://github.com/MarkEdit-app/MarkEdit-api#v0.36.0",
+    "markedit-vite": "https://github.com/MarkEdit-app/MarkEdit-vite#v0.6.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^6.4.3",
+    "vitest": "^3.2.7"
+  }
+}

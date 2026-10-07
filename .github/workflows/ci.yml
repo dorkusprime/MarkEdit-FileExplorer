@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # markedit-api / markedit-vite are GitHub dependencies; fetch over HTTPS.
+      - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+      - run: npm ci
+      - run: npm run check
+      - run: npx vite build
+      - name: dist/ is up to date
+        run: |
+          if ! git diff --quiet -- dist/; then
+            echo "::error::dist/ doesn't match the source. Run 'npm run build' and commit dist/."
+            git diff --stat -- dist/
+            exit 1
+          fi
