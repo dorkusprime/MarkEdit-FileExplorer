@@ -4,6 +4,14 @@ A VS Code–style file explorer sidebar for [MarkEdit](https://github.com/MarkEd
 
 <img src="screenshot.png" width="760" alt="MarkEdit with the File Explorer sidebar showing a nested docs folder beside an open Markdown document">
 
+## Why
+
+MarkEdit is [deliberately lean](https://github.com/MarkEdit-app/MarkEdit/wiki/Why-MarkEdit), and that's what makes it so pleasant to write in. But moving between files means switching to Finder, ForkLift or another file manager, finding the right folder, opening the file and switching back: a small detour that breaks focus.
+
+File Explorer keeps that step inside MarkEdit. It's not a notes app (no index or database), just the folders you already have, as plain files, beside the document you're editing.
+
+## Features
+
 - Lazy-loading folder tree with compact folders, indent guides and Seti-style file badges
 - Click to open Markdown files; other files are dimmed (or hidden)
 - Inline new file / folder / rename with VS Code's validation messages
