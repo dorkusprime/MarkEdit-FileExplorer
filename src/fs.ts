@@ -158,26 +158,41 @@ export async function createFolder(path: string): Promise<boolean> {
   return MarkEdit.createFile({ path, isDirectory: true });
 }
 
-/** There's no copy API: files go through base64, folders are rebuilt. */
-export async function copy(source: string, destination: string): Promise<boolean> {
+/**
+ * Copies a file or folder. There's no copy API: files go through base64 and
+ * folders are rebuilt entry by entry. Stops at the first item it can't read or
+ * write and returns its path (the caller removes the incomplete copy), or
+ * undefined on success.
+ */
+export async function copy(source: string, destination: string): Promise<string | undefined> {
   const meta = await info(source);
   if (meta === undefined) {
-    return false;
+    return source;
   }
   if (meta.isDirectory) {
-    if (!(await createFolder(destination))) {
-      return false;
+    // A folder we can't list must not become an empty "successful" copy.
+    const children = await MarkEdit.listFiles(source);
+    if (children === undefined || !(await createFolder(destination))) {
+      return source;
     }
-    const children = (await MarkEdit.listFiles(source)) ?? [];
     for (const child of children) {
-      if (!(await copy(join(source, child), join(destination, child)))) {
-        return false;
+      const failed = await copy(join(source, child), join(destination, child));
+      if (failed !== undefined) {
+        return failed;
       }
     }
-    return true;
+    return undefined;
   }
   const object = await MarkEdit.getFileObject(source);
-  return object !== undefined && MarkEdit.createFile({ path: destination, data: object.data });
+  const written = object !== undefined && (await MarkEdit.createFile({ path: destination, data: object.data }));
+  return written ? undefined : source;
+}
+
+/** Permanently deletes a path we created (e.g. an incomplete copy). */
+export async function remove(path: string): Promise<boolean> {
+  const ok = await MarkEdit.deleteFile(path);
+  forget(path);
+  return ok;
 }
 
 /** `report.md` + ` copy` → `report copy.md`. Dotfiles keep their name intact. */

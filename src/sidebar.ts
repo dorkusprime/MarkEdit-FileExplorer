@@ -11,6 +11,8 @@ import { isOpenable, writeSetting } from './settings';
 // Real CSS, bundled as a minified string (MarkEdit extensions ship as one .js file).
 import CSS from './styles.css?inline';
 import { mark } from './perf';
+import { copyInto, moveInto } from './ops';
+import type { ConflictChoice, OpResult } from './ops';
 import { TONES, toneColors } from './colors';
 
 const STORE = {
@@ -1368,60 +1370,56 @@ export class Explorer {
       return;
     }
     const dir = this.targetDir(explicit);
-    const pasted: string[] = [];
-    for (const source of clipboard.paths) {
-      if (!(await fs.exists(source))) {
-        continue;
-      }
-      if (dir.path === source || fs.isWithin(dir.path, source)) {
-        await MarkEdit.showAlert({ title: `Can’t paste “${fs.basename(source)}” into itself.`, buttons: ['OK'] });
-        continue;
-      }
-      if (clipboard.cut) {
-        if (fs.dirname(source) === dir.path) {
-          continue;
-        }
-        const destination = await this.resolveConflict(dir.path, fs.basename(source));
-        if (destination !== undefined && (await fs.move(source, destination))) {
-          pasted.push(destination);
-        }
-      } else {
-        const destination = await fs.freeCopyName(dir.path, fs.basename(source));
-        if (await fs.copy(source, destination)) {
-          pasted.push(destination);
-        }
-      }
-    }
+    const result = clipboard.cut
+      ? await moveInto(clipboard.paths, dir.path, (name, canReplace) => this.askConflict(name, canReplace))
+      : await copyInto(clipboard.paths, dir.path);
     if (clipboard.cut) {
-      this.writeClipboard(undefined);
+      // Keep whatever didn't move (cancelled or failed) on the clipboard.
+      const remaining = clipboard.paths.filter((p) => !result.moved.includes(p));
+      this.writeClipboard(remaining.length > 0 ? { paths: remaining, cut: true } : undefined);
     }
+    await this.finishTransfer(result, dir, clipboard.cut ? 'moved' : 'copied');
+  }
+
+  /** Refreshes, selects what was created, and reports anything that failed. */
+  private async finishTransfer(result: OpResult, dir: TreeNode, verb: 'moved' | 'copied'): Promise<void> {
     if (dir !== this.model.root) {
       await this.model.setExpanded(dir, true);
     }
     await this.model.refresh();
     this.pruneSelection();
-    if (pasted.length > 0) {
-      this.selection = new Set(pasted);
-      this.focusPath = this.anchorPath = pasted[pasted.length - 1];
+    if (result.created.length > 0) {
+      this.selection = new Set(result.created);
+      this.focusPath = this.anchorPath = result.created[result.created.length - 1];
     }
+    this.saveExpanded();
     this.render();
+    this.tree.focus();
+    if (result.failed.length > 0) {
+      const count = result.failed.length;
+      await MarkEdit.showAlert({
+        title: count === 1 ? `“${fs.basename(result.failed[0].path)}” wasn’t ${verb}.` : `${count} items weren’t ${verb}.`,
+        message: result.failed.map((f) => (count === 1 ? f.reason : `${fs.basename(f.path)}: ${f.reason}`)).join('\n'),
+        buttons: ['OK'],
+      });
+    }
   }
 
-  /** Returns the destination path, or undefined if the user cancelled. */
-  private async resolveConflict(dir: string, name: string): Promise<string | undefined> {
-    const destination = fs.join(dir, name);
-    if (!(await fs.exists(destination))) {
-      return destination;
+  private async askConflict(name: string, canReplace: boolean): Promise<ConflictChoice> {
+    if (!canReplace) {
+      const choice = await MarkEdit.showAlert({
+        title: `“${name}” already exists here and contains the item you’re moving.`,
+        message: 'It can’t be replaced. Keep both instead?',
+        buttons: ['Keep Both', 'Cancel'],
+      });
+      return choice === 0 ? 'keepBoth' : 'cancel';
     }
     const choice = await MarkEdit.showAlert({
-      title: `A file or folder with the name '${name}' already exists in the destination folder. Do you want to replace it?`,
-      message: 'This action is irreversible!',
+      title: `A file or folder named “${name}” already exists here. Do you want to replace it?`,
+      message: 'The existing item will be moved to the Trash.',
       buttons: ['Replace', 'Keep Both', 'Cancel'],
     });
-    if (choice === 0) {
-      return (await fs.trash(destination)) ? destination : undefined;
-    }
-    return choice === 1 ? fs.freeCopyName(dir, name) : undefined;
+    return choice === 0 ? 'replace' : choice === 1 ? 'keepBoth' : 'cancel';
   }
 
   private async copyPaths(relative: boolean): Promise<void> {
@@ -1574,28 +1572,10 @@ export class Explorer {
         return;
       }
     }
-    const results: string[] = [];
-    for (const source of paths) {
-      if (copying) {
-        const destination = await fs.freeCopyName(target.path, fs.basename(source));
-        if (await fs.copy(source, destination)) results.push(destination);
-      } else {
-        const destination = await this.resolveConflict(target.path, fs.basename(source));
-        if (destination !== undefined && (await fs.move(source, destination))) results.push(destination);
-      }
-    }
-    if (target !== this.model.root) {
-      await this.model.setExpanded(target, true);
-    }
-    await this.model.refresh();
-    this.pruneSelection();
-    if (results.length > 0) {
-      this.selection = new Set(results);
-      this.focusPath = this.anchorPath = results[results.length - 1];
-    }
-    this.saveExpanded();
-    this.render();
-    this.tree.focus();
+    const result = copying
+      ? await copyInto(paths, target.path)
+      : await moveInto(paths, target.path, (name, canReplace) => this.askConflict(name, canReplace));
+    await this.finishTransfer(result, target, copying ? 'copied' : 'moved');
   }
 }
 

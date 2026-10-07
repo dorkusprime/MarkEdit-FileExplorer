@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-10-07
+
+- **Replace is now safe.** Pasting or dropping onto an item with the same name no longer moves the source to the Trash when the existing item contains it (e.g. cutting `foo/foo` and pasting into `foo`'s parent); that case now only offers Keep Both. Other replaces are staged: the existing item is moved to the Trash only once the new one is ready, and every step is undone if a later one fails.
+- **Copies are all or nothing.** A folder or file that can't be read is reported instead of producing an empty or partial "successful" copy, and any incomplete copy is removed.
+- Failed moves and copies are now reported instead of skipped silently, and a cut stays on the clipboard for any item that wasn't moved.
+
 ## 0.1.1 — 2026-10-06
 
 - Double-clicking a folder no longer collapses and re-expands it.

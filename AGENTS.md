@@ -23,6 +23,7 @@ src/sidebar.ts      the Explorer: DOM, rendering, selection, keyboard, menus, ed
                     clipboard, drag & drop, polling, cross-tab sync
 src/model.ts        TreeModel: lazy folder loading, sorting, compact rows, reveal, refresh
 src/fs.ts           wrappers over MarkEdit's file APIs (trash, copy, case-only rename…)
+src/ops.ts          move/copy into a folder (paste, drag & drop): conflicts, staged replace, all-or-nothing copy
 src/layout.ts       makes room beside the editor; coexists with the Outline Sidebar
 src/settings.ts     settings.json parsing/validation, MarkEdit-openable file types, writes
 src/styles.css      panel CSS (theme colors and metrics via CSS variables), bundled via `?inline`
@@ -60,7 +61,7 @@ These were all found the hard way; keep them in mind before "simplifying" the re
 
 ## Testing
 
-- `npm test`: unit tests for settings, file types, excludes, sorting, compact folders, reveal/refresh and path helpers. `test/mock.ts` fakes `markedit-api` with an in-memory tree.
+- `npm test`: unit tests for settings, file types, excludes, sorting, compact folders, reveal/refresh, path helpers, the shared type cache, and move/copy edge cases (`test/ops.test.ts`, including the two scenarios reported on the registry PR). `test/mock.ts` fakes `markedit-api` with an in-memory tree.
 - Screenshots: `npm run demo` builds `demo/Atlas` (a fictional docs folder, gitignored); open it with `bin/markedit-explorer open-folder demo/Atlas` and `open -a MarkEdit demo/Atlas/planning/2026/launch-plan.md`.
 - Manual: `npm run fixture`, `npm run build && npm run reload`, then `bin/markedit-explorer open-folder test-fixture`.
 - **Debug harness** (for driving the UI without a screen): `npm run build:debug`, add `"debugDir": "/abs/path"` to the settings block and restart. Each window logs to `<debugDir>/.debug-<id>.log` (first lines include `doc=<path>`). Write `@<id>` followed by commands to `<debugDir>/.debug-cmd` (write to a temp file and `mv` it; the window clears the file): `dump`, `open`, `close`, `toggle`, `click <label>`, `dblclick <label>`, `key <Key> [meta] [shift] [alt]`, `type <text>`, `eval <js>`. In debug builds the Explorer is `window.__mfe`.
