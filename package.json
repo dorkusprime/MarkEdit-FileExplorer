@@ -8,7 +8,7 @@
   "homepage": "https://github.com/dorkusprime/MarkEdit-FileExplorer",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/dorkusprime/MarkEdit-FileExplorer.git"
+    "url": "git+https://github.com/dorkusprime/MarkEdit-FileExplorer.git"
   },
   "markeditRegistry": {
     "id": "markedit-file-explorer",

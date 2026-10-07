@@ -15,6 +15,8 @@ A VS Code–style file explorer sidebar for [MarkEdit](https://github.com/MarkEd
 
 ## Install
 
+Requires MarkEdit 1.36 or later (macOS).
+
 Not in the MarkEdit extension registry yet. Until then, either:
 
 - download `markedit-file-explorer.js` from a [release](https://github.com/dorkusprime/MarkEdit-FileExplorer/releases) into `~/Library/Containers/app.cyan.markedit/Data/Documents/scripts/`, or
