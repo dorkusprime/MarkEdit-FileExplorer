@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 — 2026-10-06
 
 - Double-clicking a folder no longer collapses and re-expands it.
 - Folders you collapse stay collapsed when MarkEdit reloads the open document.

@@ -1,6 +1,6 @@
 {
   "name": "markedit-file-explorer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A VS Code-style file explorer sidebar for MarkEdit.",
   "author": "dorkusprime",
   "license": "MIT",
