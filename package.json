@@ -25,6 +25,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "fixture": "scripts/make-fixture.sh",
+    "demo": "node scripts/make-demo.mjs",
     "reload": "osascript -e 'quit app \"MarkEdit\"' -e 'delay 1' -e 'launch app \"MarkEdit\"'",
     "uninstall": "rm ~/Library/Containers/app.cyan.markedit/Data/Documents/scripts/markedit-file-explorer.js"
   },

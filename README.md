@@ -2,6 +2,8 @@
 
 A VS Code–style file explorer sidebar for [MarkEdit](https://github.com/MarkEdit-app/MarkEdit).
 
+<img src="screenshot.png" width="760" alt="MarkEdit with the File Explorer sidebar showing a nested docs folder beside an open Markdown document">
+
 - Lazy-loading folder tree with compact folders, indent guides and Seti-style file badges
 - Click to open Markdown files; other files are dimmed (or hidden)
 - Inline new file / folder / rename with VS Code's validation messages

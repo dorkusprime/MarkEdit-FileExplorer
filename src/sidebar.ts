@@ -221,8 +221,11 @@ export class Explorer {
   /** Called when the document in this window is (re)loaded. */
   async onEditorReady(): Promise<void> {
     const current = await MarkEdit.getFileInfo();
+    // MarkEdit also rebuilds the editor when reverting the same file; only
+    // reveal when the file actually changed, so collapsed folders stay put.
+    const changed = current?.filePath !== this.activeFile;
     this.activeFile = current?.filePath;
-    if (this.treeWanted && this.settings.autoReveal && this.activeFile !== undefined) {
+    if (changed && this.treeWanted && this.settings.autoReveal && this.activeFile !== undefined) {
       await this.revealPath(this.activeFile, false);
     } else {
       this.render();
@@ -829,6 +832,12 @@ export class Explorer {
     if (!this.isInteractive(row.node)) {
       // Dimmed (non-Markdown) files are inert.
       event.preventDefault();
+      return;
+    }
+    if (event.detail > 1) {
+      // The second click of a double-click: the first already toggled the
+      // folder (or opened the file), so don't undo it. Files are also handled
+      // by the dblclick listener.
       return;
     }
     const path = row.node.path;

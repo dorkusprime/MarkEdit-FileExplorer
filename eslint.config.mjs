@@ -40,4 +40,9 @@ export default tseslint.config(
     files: ['**/*.mjs', '**/*.mts'],
     ...tseslint.configs.disableTypeChecked,
   },
+  {
+    // Node scripts (build config, scripts/).
+    files: ['**/*.mjs', '**/*.mts'],
+    languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
+  },
 );

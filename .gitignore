@@ -3,3 +3,4 @@ node_modules/
 .debug-cmd*
 test-fixture/
 .DS_Store
+demo/

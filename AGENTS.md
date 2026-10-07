@@ -61,6 +61,7 @@ These were all found the hard way; keep them in mind before "simplifying" the re
 ## Testing
 
 - `npm test`: unit tests for settings, file types, excludes, sorting, compact folders, reveal/refresh and path helpers. `test/mock.ts` fakes `markedit-api` with an in-memory tree.
+- Screenshots: `npm run demo` builds `demo/Atlas` (a fictional docs folder, gitignored); open it with `bin/markedit-explorer open-folder demo/Atlas` and `open -a MarkEdit demo/Atlas/planning/2026/launch-plan.md`.
 - Manual: `npm run fixture`, `npm run build && npm run reload`, then `bin/markedit-explorer open-folder test-fixture`.
 - **Debug harness** (for driving the UI without a screen): `npm run build:debug`, add `"debugDir": "/abs/path"` to the settings block and restart. Each window logs to `<debugDir>/.debug-<id>.log` (first lines include `doc=<path>`). Write `@<id>` followed by commands to `<debugDir>/.debug-cmd` (write to a temp file and `mv` it; the window clears the file): `dump`, `open`, `close`, `toggle`, `click <label>`, `dblclick <label>`, `key <Key> [meta] [shift] [alt]`, `type <text>`, `eval <js>`. In debug builds the Explorer is `window.__mfe`.
 - The API is also a handy probe: `osascript -e 'tell application "MarkEdit" to evaluate document 1 JavaScript "return await MarkEditFileExplorer.root()" with callAsyncJavaScript'`.
