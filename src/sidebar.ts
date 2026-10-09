@@ -195,15 +195,20 @@ export class Explorer {
     }
   }
 
-  /** ⇧⌘E: open + focus; if the tree already has focus, hide (like VS Code). */
+  /**
+   * Toggle command (⇧⌘E, menu, toolbar): show and focus, or hide. Deliberately
+   * independent of keyboard focus: invoking a native menu item or toolbar
+   * button disturbs the page's focus, so a focus-based toggle misfires.
+   */
   toggle(): void {
-    if (!this.opened) {
-      this.open(true);
-    } else if (this.root.contains(document.activeElement)) {
+    if (this.opened) {
       this.close();
-    } else {
-      this.tree.focus();
+      return;
     }
+    this.open(true);
+    // Closing the native menu hands focus back to the editor after this runs,
+    // so focus the explorer again once that has happened.
+    setTimeout(() => this.tree.focus(), 50);
   }
 
   setPosition(position: 'left' | 'right', fromOtherTab = false): void {

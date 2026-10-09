@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 — 2026-10-09
+
+- **Toggle File Explorer is reliable.** It now simply shows (and focuses) or hides the sidebar. Previously it depended on where keyboard focus was, which the menu and toolbar disturb, so it sometimes only focused the explorer instead of hiding it.
+
 ## 0.1.3 — 2026-10-07
 
 - **No more flicker.** The tree was rebuilt every couple of seconds (and on every focus) because hidden files like `.DS_Store` made each check look like a change; it now redraws only when something visible actually changed.
