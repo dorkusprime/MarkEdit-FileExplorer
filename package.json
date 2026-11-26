@@ -1,6 +1,6 @@
 {
   "name": "markedit-file-explorer",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A VS Code-style file explorer sidebar for MarkEdit.",
   "author": "dorkusprime",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "@lezer/highlight": "^1.2.5",
     "eslint": "^9.39.5",
     "happy-dom": "^20.14.5",
-    "markedit-api": "https://github.com/MarkEdit-app/MarkEdit-api#v0.36.0",
+    "markedit-api": "github:MarkEdit-app/MarkEdit-api#v0.38.0",
     "markedit-vite": "https://github.com/MarkEdit-app/MarkEdit-vite#v0.6.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.71.1",
