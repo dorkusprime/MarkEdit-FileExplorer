@@ -19,6 +19,7 @@ describe('loadSettings', () => {
     expect(settings.rowHeight).toBe(22);
     expect(settings.openableExtensions).toContain('md');
     expect(settings.openableExtensions).not.toContain('txt');
+    expect(settings.openTarget).toBe('tab');
   });
 
   it('accepts valid values and rejects invalid ones', () => {
@@ -28,6 +29,13 @@ describe('loadSettings', () => {
     expect(settings.indentGuides).toBe(DEFAULTS.indentGuides);
     expect(settings.fontSize).toBe('editor');
     expect(settings.openMode).toBe('doubleClick');
+  });
+
+  it('validates openTarget and falls back to a tab', () => {
+    expect(configure({ openTarget: 'window' }).openTarget).toBe('window');
+    expect(configure({ openTarget: 'automatic' }).openTarget).toBe('automatic');
+    expect(configure({ openTarget: 'split' }).openTarget).toBe('tab');
+    expect(configure({ openTarget: 42 }).openTarget).toBe('tab');
   });
 
   it('merges exclude patterns over the defaults', () => {
