@@ -4,7 +4,8 @@
  * guides are configurable via CSS variables / classes set in sidebar.ts.
  * Colors are derived from the live editor theme via --mfe-bg / --mfe-fg.
  */
-.mfe {
+.mfe,
+.mfe-picker-backdrop {
   --mfe-panel: color-mix(in srgb, var(--mfe-fg) 4%, var(--mfe-bg));
   --mfe-hover: color-mix(in srgb, var(--mfe-fg) 7%, transparent);
   --mfe-inactive-sel: color-mix(in srgb, var(--mfe-fg) 12%, transparent);
@@ -16,6 +17,8 @@
   /* macOS system colors: adapt to light/dark mode and accessibility settings. */
   --mfe-error: -apple-system-red;
   --mfe-warning: -apple-system-orange;
+}
+.mfe {
   position: fixed;
   top: 0;
   bottom: 0;
@@ -241,4 +244,141 @@ html.mfe-push .cm-md-activeLine {
   color: white;
   font: inherit;
   cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- folder picker */
+
+.mfe-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--mfe-fg);
+  font-family: var(--mfe-font, -apple-system, BlinkMacSystemFont, system-ui, sans-serif);
+  font-size: var(--mfe-font-size, 13px);
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+  outline: none;
+}
+.mfe-picker {
+  display: flex;
+  flex-direction: column;
+  width: 580px;
+  max-width: calc(100vw - 80px);
+  height: 460px;
+  max-height: calc(100vh - 80px);
+  background: var(--mfe-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38), 0 0 0 0.5px rgba(0, 0, 0, 0.22);
+}
+.mfe-picker-header {
+  padding: 14px 16px 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mfe-picker-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-top: 1px solid var(--mfe-border);
+}
+.mfe-picker-side {
+  flex: 0 0 150px;
+  padding: 6px;
+  overflow-y: auto;
+  border-right: 1px solid var(--mfe-border);
+  box-sizing: border-box;
+}
+.mfe-picker-sideitem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.mfe-picker-sideitem svg { flex: 0 0 16px; opacity: 0.85; }
+.mfe-picker-sideitem span { overflow: hidden; text-overflow: ellipsis; }
+.mfe-picker-sideitem:hover { background: var(--mfe-hover); }
+.mfe-picker-sideitem.mfe-picker-current { background: var(--mfe-inactive-sel); }
+.mfe-picker-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.mfe-picker-path {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--mfe-border);
+}
+.mfe-picker-path::-webkit-scrollbar { display: none; }
+.mfe-picker-crumb {
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.mfe-picker-crumb:hover { background: var(--mfe-hover); }
+.mfe-picker-crumb-sep { opacity: 0.4; padding: 0 1px; }
+.mfe-picker-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px;
+  outline: none;
+}
+.mfe-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mfe-picker-row svg { flex: 0 0 16px; opacity: 0.85; }
+.mfe-picker-row.mfe-picker-up svg { opacity: 0.6; transform: rotate(180deg); }
+.mfe-picker-name { overflow: hidden; text-overflow: ellipsis; }
+.mfe-picker-row:hover { background: var(--mfe-hover); }
+.mfe-picker-row.mfe-picker-selected { background: var(--mfe-active-sel); }
+.mfe-picker-empty {
+  padding: 10px 8px;
+  color: var(--mfe-muted);
+}
+.mfe-picker-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--mfe-border);
+}
+.mfe-picker-footer button {
+  min-width: 76px;
+  padding: 5px 14px;
+  border: 1px solid var(--mfe-border);
+  border-radius: 6px;
+  background: var(--mfe-panel);
+  color: var(--mfe-fg);
+  font: inherit;
+  cursor: pointer;
+}
+.mfe-picker-footer button:hover { background: var(--mfe-hover); }
+.mfe-picker-footer button.mfe-picker-primary {
+  border-color: transparent;
+  background: var(--mfe-accent);
+  color: #fff;
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.5 — 2026-11-26
+
+- **Open Folder picks instead of types.** *Open Folder…* now opens a folder browser — a
+  shortcut rail (Home / Documents / Desktop / Downloads), a clickable breadcrumb and a list of
+  subfolders — so you can navigate to a folder and open it with a click, rather than pasting a
+  path into a text box. On MarkEdit 1.37 or later it uses the native macOS open panel
+  (`MarkEdit.showOpenPanel`) instead, which gets the standard Finder-style picker.
+- **Open files in a tab of the current window.** Clicking a file now goes through `MarkEdit.openDocument` with `target: "tab"` instead of `MarkEdit.openFile`, so the file opens beside the explorer instead of in a new window. A new `openTarget` setting (`"tab"` / `"window"` / `"automatic"`, default `"tab"`) chooses the behavior. This needs MarkEdit 1.37 or later; on older versions the extension keeps the old `openFile` path and tab vs. window follows **Settings → Window → Tabbing Mode**.
+
 ## 0.1.4 — 2026-10-09
 
 - **Toggle File Explorer is reliable.** It now simply shows (and focuses) or hides the sidebar. Previously it depended on where keyboard focus was, which the menu and toolbar disturb, so it sometimes only focused the explorer instead of hiding it.

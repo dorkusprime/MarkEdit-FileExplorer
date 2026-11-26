@@ -14,6 +14,9 @@ File Explorer keeps that step inside MarkEdit. It's not a notes app (no index or
 
 - Lazy-loading folder tree with compact folders, indent guides and Seti-style file badges
 - Click to open Markdown files; other files are dimmed (or hidden)
+- **Open Folder…** shows a folder browser (shortcut rail, clickable
+  breadcrumb, directory list) instead of asking you to type a path; on
+  MarkEdit 1.37+ it uses the native macOS panel instead
 - Inline new file / folder / rename with VS Code's validation messages
 - Cut / copy / paste, drag & drop (⌥ to copy), delete to Trash
 - Keyboard navigation (arrows, type-to-find, ↩ rename, ⌘⌫ delete, ⌥⌘C copy path)
@@ -94,6 +97,7 @@ shown are the defaults.
 | `sortOrder` | `"default"` \| `"mixed"` \| `"filesFirst"` \| `"type"` \| `"modified"` | As VS Code's `explorer.sortOrder`. |
 | **Behavior** | | |
 | `openMode` | `"singleClick"` \| `"doubleClick"` | How files open (VS Code's `workbench.list.openMode`). |
+| `openTarget` | `"tab"` \| `"window"` \| `"automatic"` | Where clicked files open: a tab of the current window (default), a new window, or whatever MarkEdit decides. Needs MarkEdit 1.37+; older versions fall back to macOS. |
 | `autoReveal` | boolean | Select and scroll to the current document's file. |
 | `confirmDelete` | boolean | Ask before moving to the Trash. |
 | `confirmDragAndDrop` | boolean | Ask before moving by drag & drop. |
@@ -118,16 +122,21 @@ archives — MarkEdit treats as binary, so it can't be made clickable.
 "openableFileTypes": ["markdown", "structured", "txt"]
 ```
 
-**Which app opens them is up to macOS.** The extension can only ask macOS to
-open a file, which uses the file type's default app. `.md` usually goes to
-MarkEdit, but `.txt` may open in TextEdit and `.json` in your code editor. To
-have a type open in MarkEdit, make MarkEdit its default: in Finder, **Get Info →
-Open with → MarkEdit → Change All…**.
+**Which app opens them is up to macOS.** For files MarkEdit can't read,
+the extension can only ask macOS to open them, which uses the file type's
+default app. `.md` usually goes to MarkEdit, but `.txt` may open in TextEdit and
+`.json` in your code editor. To have a type open in MarkEdit, make MarkEdit its
+default: in Finder, **Get Info → Open with → MarkEdit → Change All…**.
 
 ## Opening files in tabs
 
-Files open via macOS, so MarkEdit's own setting decides tab vs. window:
-**Settings → Window → Tabbing Mode → Preferred** opens them as tabs.
+Clicking a file opens it in a tab of the current window (`openTarget: "tab"`),
+using MarkEdit's own document API rather than macOS. Set `openTarget` to
+`"window"` for a separate window, or `"automatic"` to follow
+**Settings → Window → Tabbing Mode**.
+
+This needs MarkEdit 1.37 or later. On 1.36 the extension falls back to asking
+macOS to open the file, so tab vs. window is decided by that setting again.
 
 ## Scripting
 

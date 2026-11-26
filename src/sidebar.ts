@@ -14,6 +14,7 @@ import { mark } from './perf';
 import { copyInto, moveInto } from './ops';
 import type { ConflictChoice, OpResult } from './ops';
 import { TONES, toneColors } from './colors';
+import { pickFolder as openFolderBrowser, themeVariables } from './folderpicker';
 
 const STORE = {
   open: 'mfe.open',
@@ -284,22 +285,34 @@ export class Explorer {
   }
 
   async promptForRoot(): Promise<void> {
-    const input = await MarkEdit.showTextBox({
-      title: 'Open Folder',
-      placeholder: '~/path/to/folder',
-      defaultValue: fs.tildify(this.rootPath),
-    });
-    if (input === undefined || input.trim() === '') {
+    const path = await this.pickFolder();
+    if (path === undefined) {
       return;
     }
-    const path = fs.untildify(input.trim()).replace(/\/+$/, '') || '/';
     const meta = await fs.info(path);
     if (meta?.isDirectory !== true) {
-      await MarkEdit.showAlert({ title: `“${input.trim()}” isn’t a folder MarkEdit can open.`, buttons: ['OK'] });
+      await MarkEdit.showAlert({ title: `“${fs.tildify(path)}” isn’t a folder MarkEdit can open.`, buttons: ['OK'] });
       return;
     }
     await this.setRoot(path);
     this.open(true);
+  }
+
+  /**
+   * Asks the user for a folder without making them type a path: the native
+   * open panel where MarkEdit has one (1.37+), otherwise the built-in browser.
+   */
+  private async pickFolder(): Promise<string | undefined> {
+    if (typeof MarkEdit.showOpenPanel === 'function') {
+      const chosen = await MarkEdit.showOpenPanel({
+        title: 'Open Folder',
+        prompt: 'Open',
+        selectionType: 'directories',
+        allowsMultipleSelection: false,
+      });
+      return chosen?.[0];
+    }
+    return openFolderBrowser({ startPath: this.rootPath, title: 'Open Folder', cssVars: themeVariables(this.root) });
   }
 
   /** Public API entry point: show `path` as the explorer root. */
@@ -1097,10 +1110,29 @@ export class Explorer {
     if (node.path === this.activeFile || !this.isInteractive(node)) {
       return;
     }
-    const ok = await MarkEdit.openFile(node.path);
+    const ok = await this.openPath(node.path);
     if (!ok) {
       await MarkEdit.showAlert({ title: `Couldn’t open “${node.name}”.`, buttons: ['OK'] });
     }
+  }
+
+  /**
+   * Opens `path` in MarkEdit, honouring `openTarget`.
+   *
+   * `MarkEdit.openDocument` (MarkEdit 1.37+) opens the file in MarkEdit itself
+   * and can put it in a tab of the current window. `openFile` (all versions) is
+   * a LaunchServices request instead: the file's *default app* opens it, and
+   * MarkEdit's Tabbing Mode setting alone decides between tab and window.
+   *
+   * Files MarkEdit can't read are handed to LaunchServices, as before.
+   */
+  private async openPath(path: string): Promise<boolean> {
+    if (typeof MarkEdit.openDocument === 'function') {
+      if (await MarkEdit.openDocument(path, { target: this.settings.openTarget })) {
+        return true;
+      }
+    }
+    return MarkEdit.openFile(path);
   }
 
   // ---------------------------------------------------------------- menus
@@ -1296,7 +1328,7 @@ export class Explorer {
     await this.model.reveal(path);
     this.selectAfterChange(path);
     if (!isFolder) {
-      await MarkEdit.openFile(path);
+      await this.openPath(path);
     }
   }
 

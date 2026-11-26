@@ -25,6 +25,7 @@ src/model.ts        TreeModel: lazy folder loading, sorting, compact rows, revea
 src/fs.ts           wrappers over MarkEdit's file APIs (trash, copy, case-only rename…)
 src/ops.ts          move/copy into a folder (paste, drag & drop): conflicts, staged replace, all-or-nothing copy
 src/layout.ts       makes room beside the editor; coexists with the Outline Sidebar
+src/folderpicker.ts  folder browser for "Open Folder" on MarkEdit < 1.37 (no showOpenPanel there)
 src/settings.ts     settings.json parsing/validation, MarkEdit-openable file types, writes
 src/styles.css      panel CSS (theme colors and metrics via CSS variables), bundled via `?inline`
 src/perf.ts         startup marks + file-API call counts (MarkEditFileExplorer.perf())
@@ -47,7 +48,11 @@ These were all found the hard way; keep them in mind before "simplifying" the re
 - **`moveFile` can return false after succeeding** (seen moving into `~/.Trash`), so `fs.move` verifies on disk. It also treats `a.md` → `A.md` as a no-op on the case-insensitive filesystem, so case-only renames hop through a temp name.
 - **No copy API**: files are copied via `getFileObject` (base64) + `createFile`; folders recursively.
 - **Clipboard writes need a user gesture.** Keyboard shortcuts qualify; native context-menu callbacks don't, so Copy Path falls back to a text box.
-- **`openFile` goes through LaunchServices**, i.e. the file's *default app*. Only types MarkEdit is the default for open in MarkEdit; tab vs. window is MarkEdit's Tabbing Mode setting. Extensions can't force either.
+- **`openDocument` is the one that can pick a tab; `openFile` can't.** `MarkEdit.openDocument(path, { target })` (MarkEdit 1.37+) opens the file in MarkEdit itself and `target: 'tab'` adds it to the current window's tab group. `MarkEdit.openFile` goes through LaunchServices instead — the file's *default app*, with tab vs. window decided by MarkEdit's Tabbing Mode setting. `openPath` in `src/sidebar.ts` uses `openDocument` when it exists and falls back to `openFile` on 1.36, where it doesn't.
+- **`showOpenPanel` is 1.37+ only.** `MarkEdit.showOpenPanel({ selectionType: 'directories' })` is the
+  native NSOpenPanel; 1.36's native bridge has no panel API at all, so `promptForRoot` falls back to
+  the in-app browser in `src/folderpicker.ts` (theme vars copied from the panel root; folders listed
+  with `fs.list`). Keep the fallback working — it is what 1.36 users actually see.
 - **Native menu shortcuts** (⌘C/⌘X/⌘V) may arrive as `copy`/`cut`/`paste` events rather than keydowns; both paths are handled.
 - **Background tabs don't run `requestAnimationFrame`.** Don't rely on rAF for anything that must happen while a tab is hidden.
 - **Re-rendering the tree on mousedown breaks click/dblclick/drag** (the target element disappears). Selection changes use `paint()` (class toggles); structural changes use `render()`.
