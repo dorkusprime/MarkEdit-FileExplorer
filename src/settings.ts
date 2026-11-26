@@ -38,6 +38,8 @@ export interface ExplorerSettings {
   sortOrder: SortOrder;
   // Behavior
   openMode: 'singleClick' | 'doubleClick';
+  /** Where clicked files open: a tab of the current window, a new window, or MarkEdit's own rule. */
+  openTarget: 'tab' | 'window' | 'automatic';
   autoReveal: boolean;
   confirmDelete: boolean;
   confirmDragAndDrop: boolean;
@@ -68,6 +70,7 @@ export const DEFAULTS: ExplorerSettings = {
   otherFiles: 'dim',
   sortOrder: 'default',
   openMode: 'singleClick',
+  openTarget: 'tab',
   autoReveal: true,
   confirmDelete: true,
   confirmDragAndDrop: true,
@@ -112,6 +115,7 @@ export function loadSettings(): ExplorerSettings {
     otherFiles: pick('otherFiles', oneOf('dim', 'hide')),
     sortOrder: pick('sortOrder', oneOf('default', 'mixed', 'filesFirst', 'type', 'modified')),
     openMode: pick('openMode', oneOf('singleClick', 'doubleClick')),
+    openTarget: pick('openTarget', oneOf('tab', 'window', 'automatic')),
     autoReveal: pick('autoReveal', isBool),
     confirmDelete: pick('confirmDelete', isBool),
     confirmDragAndDrop: pick('confirmDragAndDrop', isBool),
